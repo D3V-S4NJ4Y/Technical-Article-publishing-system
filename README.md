@@ -27,6 +27,19 @@ A full-stack MERN (MongoDB, Express, React, Node.js) application for publishing 
   - Admin dashboard for managing all articles
   - Separate admin routes for complete article management
 
+
+## Role-Based Authorization Matrix
+
+| Action | Reader | Writer | Admin |
+|--------|--------|--------| ------|
+| View published articles | ✅ | ✅ | ✅ |
+| Create articles | ❌ | ✅ | ✅ |
+| Edit own drafts | ❌ | ✅ | ✅ |
+| Edit any article | ❌ | ❌ | ✅ |
+| Publish articles | ❌ | ❌ | ✅ |
+| Delete own articles | ❌ | ❌ | ✅ |
+| Delete any article | ❌ | ❌ | ✅ |
+
 ## Tech Stack
 
 - **Backend:**
@@ -200,18 +213,6 @@ The frontend will run on `http://localhost:3000`
 - **Published**: Visible to everyone
 - Writers can only create draft articles
 - Admins can publish draft articles
-
-## Role-Based Authorization Matrix
-
-| Action | Reader | Writer | Admin |
-|--------|--------|--------| ------|
-| View published articles | ✅ | ✅ | ✅ |
-| Create articles | ❌ | ✅ | ✅ |
-| Edit own drafts | ❌ | ✅ | ✅ |
-| Edit any article | ❌ | ❌ | ✅ |
-| Publish articles | ❌ | ❌ | ✅ |
-| Delete own articles | ❌ | ❌ | ✅ |
-| Delete any article | ❌ | ❌ | ✅ |
 
 ## Usage
 
