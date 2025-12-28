@@ -1,7 +1,7 @@
 services:
   # Backend API Service
   - type: web
-    name: techArticles-backend
+    name: techarticles-backend
     env: node
     plan: free
     buildCommand: cd backend && npm install
@@ -12,9 +12,7 @@ services:
       - key: PORT
         value: 10000
       - key: MONGODB_URI
-        fromDatabase:
-          name: techArticles-db
-          property: connectionString
+        value: mongodb+srv://sanjay_db_user:XmuwLQjeOHsZR7gw@cluster0.qwa9nyi.mongodb.net/?appName=Cluster0
       - key: JWT_SECRET
         generateValue: true
       - key: ADMIN_EMAIL
@@ -24,7 +22,7 @@ services:
 
   # Frontend Static Site
   - type: web
-    name: techArticles-frontend
+    name: techarticles-frontend
     env: static
     plan: free
     buildCommand: cd frontend && npm install && npm run build
@@ -32,8 +30,3 @@ services:
     envVars:
       - key: VITE_API_URL
         value: https://techarticles-backend.onrender.com
-
-databases:
-  - name: techArticles-db
-    databaseName: techArticles
-    user: techArticles_user
