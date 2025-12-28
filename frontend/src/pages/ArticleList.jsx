@@ -5,17 +5,74 @@ import { useAuth } from '../context/AuthContext';
 
 const ArticleList = () => {
   const [articles, setArticles] = useState([]);
+  const [filteredArticles, setFilteredArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState('all');
   const { user } = useAuth();
 
   useEffect(() => {
     fetchArticles();
   }, [user]);
 
+  useEffect(() => {
+    filterArticles();
+  }, [articles, searchTerm, dateFilter]);
+
+  const filterArticles = () => {
+    let filtered = articles;
+    
+    if (searchTerm) {
+      filtered = filtered.filter(article => 
+        article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        article.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        article.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        article.author?.username.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    if (dateFilter !== 'all') {
+      const now = new Date();
+      const filterDate = new Date();
+      
+      switch(dateFilter) {
+        case 'today':
+          filterDate.setHours(0, 0, 0, 0);
+          filtered = filtered.filter(article => {
+            const articleDate = new Date(article.publishedAt || article.createdAt);
+            return articleDate >= filterDate;
+          });
+          break;
+        case 'week':
+          filterDate.setDate(now.getDate() - 7);
+          filtered = filtered.filter(article => {
+            const articleDate = new Date(article.publishedAt || article.createdAt);
+            return articleDate >= filterDate;
+          });
+          break;
+        case 'month':
+          filterDate.setMonth(now.getMonth() - 1);
+          filtered = filtered.filter(article => {
+            const articleDate = new Date(article.publishedAt || article.createdAt);
+            return articleDate >= filterDate;
+          });
+          break;
+        case 'year':
+          filterDate.setFullYear(now.getFullYear() - 1);
+          filtered = filtered.filter(article => {
+            const articleDate = new Date(article.publishedAt || article.createdAt);
+            return articleDate >= filterDate;
+          });
+          break;
+      }
+    }
+    
+    setFilteredArticles(filtered);
+  };
+
   const fetchArticles = async () => {
     try {
-      // Always fetch articles - backend will return published articles for public,
-      // and published + drafts for authenticated writers/admins
       const response = await axios.get('/api/articles');
       setArticles(response.data.articles || []);
     } catch (error) {
@@ -26,13 +83,30 @@ const ArticleList = () => {
     }
   };
 
+  const handleDelete = async (articleId, articleTitle) => {
+    if (!window.confirm(`Are you sure you want to delete "${articleTitle}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await axios.delete(`/api/articles/${articleId}`);
+      setMessage('Article deleted successfully!');
+      fetchArticles();
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Failed to delete article');
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
   if (loading) {
     return <div className="container loading">Loading articles...</div>;
   }
 
-  const publishedArticles = articles.filter(a => a.status === 'published');
-  const draftArticles = articles.filter(a => a.status === 'draft');
-  const privateArticles = articles.filter(a => a.status === 'private');
+  const displayArticles = filteredArticles.length > 0 ? filteredArticles : articles;
+  const publishedArticles = displayArticles.filter(a => a.status === 'published');
+  const draftArticles = displayArticles.filter(a => a.status === 'draft');
+  const privateArticles = displayArticles.filter(a => a.status === 'private');
 
   return (
     <div className="container">
@@ -44,6 +118,48 @@ const ArticleList = () => {
             : 'Discover amazing technical content from our expert writers'}
         </p>
       </div>
+      
+      <div className="card" style={{ marginBottom: '32px' }}>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'end' }}>
+          <div className="form-group" style={{ flex: 1, minWidth: '250px', marginBottom: 0 }}>
+            <label>Search Articles</label>
+            <input
+              type="text"
+              placeholder="Search by title, content, tags, or author..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="form-group" style={{ minWidth: '150px', marginBottom: 0 }}>
+            <label>Filter by Date</label>
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '14px 16px',
+                border: '2px solid var(--border-color)',
+                borderRadius: '10px',
+                fontSize: '16px',
+                background: 'var(--bg-white)',
+                fontFamily: 'inherit'
+              }}
+            >
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="week">Last Week</option>
+              <option value="month">Last Month</option>
+              <option value="year">Last Year</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      {message && (
+        <div className={`alert ${message.includes('success') ? 'alert-success' : 'alert-error'}`}>
+          {message}
+        </div>
+      )}
       {privateArticles.length > 0 && (user?.role === 'writer' || user?.role === 'admin') && (
         <div className="card" style={{ 
           marginBottom: '32px',

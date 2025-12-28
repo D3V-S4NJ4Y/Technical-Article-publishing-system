@@ -206,6 +206,9 @@ const AdminDashboard = () => {
                   <Link to={`/articles/${article._id}`} className="btn btn-secondary">
                     View
                   </Link>
+                  <Link to={`/edit-article/${article._id}`} className="btn btn-primary">
+                    Edit
+                  </Link>
                 </div>
               </div>
             ))}

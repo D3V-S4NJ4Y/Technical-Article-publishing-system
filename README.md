@@ -5,16 +5,27 @@ A full-stack MERN (MongoDB, Express, React, Node.js) application for publishing 
 ## Features
 
 - **Three User Roles:**
-  - **Admin**: Review, publish, and delete articles
-  - **Writer**: Create and edit their own draft articles
+  - **Admin**: Review, publish, edit, and delete any articles
+  - **Writer**: Create and edit their own articles (draft/private/published)
   - **Reader**: Browse and read published articles
 
 - **Article Management:**
-  - Create articles in draft status
-  - Edit articles (writers can only edit their own drafts)
-  - Publish articles (admin only)
-  - Delete articles (admin only)
+  - Create articles with draft/published/private status
+  - Edit articles (writers can edit their own, admins can edit any)
+  - Publish articles (admin only via publish button)
+  - Delete articles (writers can delete their own, admins can delete any)
   - Tag articles for better organization
+
+- **Search & Filter System:**
+  - Real-time search by title, content, tags, or author name
+  - Date-based filtering (Today, Last Week, Last Month, Last Year)
+  - Combined search and date filtering
+
+- **Enhanced Admin Controls:**
+  - Admin can edit any article from article list or detail view
+  - Admin can delete any article with confirmation
+  - Admin dashboard for managing all articles
+  - Separate admin routes for complete article management
 
 ## Tech Stack
 
@@ -80,22 +91,23 @@ Technical Article publishing system/
 
 ### Backend Setup
 
-1. Navigate to the backend directory:
-```bash
-cd backend
-```
 
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Create a `.env` file in the backend directory:
+1. Create a `.env` file in the backend directory:
 ```env
 MONGODB_URI=mongodb+srv://sanjay_db_user...
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 PORT=5000
 NODE_ENV=development
+```
+
+2. Navigate to the backend directory (Terminal1):
+```bash
+cd backend
+```
+
+3. Install dependencies:
+```bash
+npm install
 ```
 
 4. Start the backend server:
@@ -107,7 +119,7 @@ The backend server will run on `http://localhost:5000`
 
 ### Frontend Setup
 
-1. Navigate to the frontend directory:
+1. Navigate to the frontend directory (Terminal2):
 ```bash
 cd frontend
 ```
@@ -162,38 +174,85 @@ The frontend will run on `http://localhost:3000`
   content: String,
   tags: [String],
   author: ObjectId (ref: User),
-  status: String (enum: 'draft', 'published'),
+  status: String (enum: 'draft', 'published', 'private'),
   publishedAt: Date,
   timestamps
 }
 ```
+
+## New Features Added
+
+### Enhanced Admin Capabilities
+- Admins can now edit any article regardless of author or status
+- Delete functionality available for admins on all articles
+- Edit and Delete buttons available in article lists for admins
+- Complete article management from both list view and detail view
+
+### Search and Filter System
+- **Real-time Search**: Search across title, content, tags, and author names
+- **Date Filtering**: Filter articles by Today, Last Week, Last Month, Last Year
+- **Combined Filtering**: Use search and date filters together
+- **Responsive Design**: Works on all device sizes
+
+### Article Status System
+- **Draft**: Visible to author and admins only
+- **Published**: Visible to everyone
+- **Private**: Visible to author and admins only
+- Writers can set any status when creating/editing articles
+- Admins can change any article status
+
+## Role-Based Authorization Matrix
+
+| Action | Reader | Writer | Admin |
+|--------|--------|--------| ------|
+| View published articles | ✅ | ✅ | ✅ |
+| Create articles | ❌ | ✅ | ✅ |
+| Edit own drafts/private | ❌ | ✅ | ✅ |
+| Edit any article | ❌ | ❌ | ✅ |
+| Publish articles | ❌ | ❌ | ✅ |
+| Delete own articles | ❌ | ✅ | ✅ |
+| Delete any article | ❌ | ❌ | ✅ |
 
 ## Usage
 
 1. **Register/Login**: Create an account with your desired role (admin, writer, or reader)
 
 2. **Writers**:
-   - Create new articles (saved as drafts)
-   - Edit your own draft articles
-   - View all your articles
+   - Create new articles (draft/published/private status)
+   - Edit your own articles
+   - Delete your own articles
+   - View all your articles in "My Articles" section
 
 3. **Admins**:
-   - View all articles (drafts and published)
+   - View all articles (drafts, published, and private)
+   - Edit any article (from article list or detail view)
+   - Delete any article with confirmation
    - Publish draft articles
-   - Delete any article
-   - Edit any article
+   - Complete article management via Admin Dashboard
 
 4. **Readers**:
    - Browse published articles
+   - Search articles by title, content, tags, or author
+   - Filter articles by date (Today, Last Week, Last Month, Last Year)
    - Read article details
+
+5. **Search & Filter (All Users)**:
+   - Use search bar to find articles by keywords
+   - Filter by date ranges for recent content
+   - Real-time filtering as you type
 
 ## Security Features
 
 - Password hashing with bcryptjs
-- JWT-based authentication
+- JWT-based authentication with 7-day expiration
 - Role-based authorization middleware
 - Protected API routes
-- Writers can only edit their own draft articles
+- Enhanced permission system:
+  - Writers can edit/delete their own articles
+  - Admins can edit/delete any article
+  - Automatic admin user creation on server startup
+- Input validation and sanitization
+- Secure article visibility based on user roles
 
 ## License
 

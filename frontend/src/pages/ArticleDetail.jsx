@@ -38,7 +38,7 @@ const ArticleDetail = () => {
     );
   }
 
-  const canEdit = user && (user.role === 'admin' || (user.role === 'writer' && String(article.author._id) === String(user.id) && (article.status === 'draft' || article.status === 'private')));
+  const canEdit = user && (user.role === 'admin' || (user.role === 'writer' && String(article.author._id) === String(user.id)));
 
   return (
     <div className="container">
