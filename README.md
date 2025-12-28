@@ -92,7 +92,7 @@ npm install
 
 3. Create a `.env` file in the backend directory:
 ```env
-MONGODB_URI=mongodb+srv://sanjay_db_user:XmuwLQjeOHsZR7gw@cluster0.qwa9nyi.mongodb.net/?appName=Cluster0
+MONGODB_URI=mongodb+srv://sanjay_db_user...
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 PORT=5000
 NODE_ENV=development
