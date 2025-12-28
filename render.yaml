@@ -1,31 +1,8 @@
 services:
-  # Backend API Service
+  # Full-stack Application (Backend + Frontend)
   - type: web
-    name: techarticles-backend
+    name: techarticles-app
     env: node
     plan: free
-    buildCommand: cd backend && npm install
+    buildCommand: cd frontend && npm install && npm run build && cd ../backend && npm install
     startCommand: cd backend && npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 10000
-      - key: MONGODB_URI
-        value: mongodb+srv://sanjay_db_user:XmuwLQjeOHsZR7gw@cluster0.qwa9nyi.mongodb.net/?appName=Cluster0
-      - key: JWT_SECRET
-        generateValue: true
-      - key: ADMIN_EMAIL
-        value: admin@gmail.com
-      - key: ADMIN_PASSWORD
-        value: 123456
-
-  # Frontend Static Site
-  - type: web
-    name: techarticles-frontend
-    env: static
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://techarticles-backend.onrender.com
