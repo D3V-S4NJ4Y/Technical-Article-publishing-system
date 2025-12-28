@@ -1,7 +1,7 @@
 services:
   # Full-stack Application (Backend + Frontend)
   - type: web
-    name: techarticles-app
+    name: techarticles-backend
     env: node
     plan: free
     buildCommand: cd frontend && npm install && npm run build && cd ../backend && npm install
