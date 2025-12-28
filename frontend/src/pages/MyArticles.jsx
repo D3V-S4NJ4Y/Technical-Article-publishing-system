@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const MyArticles = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchArticles();
@@ -75,7 +77,7 @@ const MyArticles = () => {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '16px' }}>
                 <span className={`badge badge-${article.status}`}>
-                  {article.status === 'published' ? 'Published' : article.status === 'private' ? 'Private' : 'Draft'}
+                  {article.status === 'published' ? 'Published' : 'Draft'}
                 </span>
               </div>
               <h2 style={{ marginBottom: '12px', fontSize: '1.5rem' }}>
@@ -126,16 +128,20 @@ const MyArticles = () => {
                 <Link to={`/articles/${article._id}`} className="btn btn-primary" style={{ flex: '1 1 auto', minWidth: '100px' }}>
                   View
                 </Link>
-                <Link to={`/edit-article/${article._id}`} className="btn btn-secondary" style={{ flex: '1 1 auto', minWidth: '100px' }}>
-                  Edit
-                </Link>
-                <button
-                  onClick={() => handleDelete(article._id, article.title)}
-                  className="btn btn-danger"
-                  style={{ flex: '1 1 auto', minWidth: '100px' }}
-                >
-                  Delete
-                </button>
+                {(article.status === 'draft' || user?.role === 'admin') && (
+                  <Link to={`/edit-article/${article._id}`} className="btn btn-secondary" style={{ flex: '1 1 auto', minWidth: '100px' }}>
+                    Edit
+                  </Link>
+                )}
+                {user?.role === 'admin' && (
+                  <button
+                    onClick={() => handleDelete(article._id, article.title)}
+                    className="btn btn-danger"
+                    style={{ flex: '1 1 auto', minWidth: '100px' }}
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             </div>
           ))}

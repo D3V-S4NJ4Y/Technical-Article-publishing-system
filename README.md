@@ -6,14 +6,14 @@ A full-stack MERN (MongoDB, Express, React, Node.js) application for publishing 
 
 - **Three User Roles:**
   - **Admin**: Review, publish, edit, and delete any articles
-  - **Writer**: Create and edit their own articles (draft/private/published)
+  - **Writer**: Create and edit their own draft articles
   - **Reader**: Browse and read published articles
 
 - **Article Management:**
-  - Create articles with draft/published/private status
-  - Edit articles (writers can edit their own, admins can edit any)
+  - Create articles in draft status (automatic for writers)
+  - Edit articles (writers can edit their own drafts only, admins can edit any)
   - Publish articles (admin only via publish button)
-  - Delete articles (writers can delete their own, admins can delete any)
+  - Delete articles (admin only)
   - Tag articles for better organization
 
 - **Search & Filter System:**
@@ -174,7 +174,7 @@ The frontend will run on `http://localhost:3000`
   content: String,
   tags: [String],
   author: ObjectId (ref: User),
-  status: String (enum: 'draft', 'published', 'private'),
+  status: String (enum: 'draft', 'published'),
   publishedAt: Date,
   timestamps
 }
@@ -183,10 +183,11 @@ The frontend will run on `http://localhost:3000`
 ## New Features Added
 
 ### Enhanced Admin Capabilities
-- Admins can now edit any article regardless of author or status
+- Admins can edit any article regardless of author or status
 - Delete functionality available for admins on all articles
-- Edit and Delete buttons available in article lists for admins
+- Publish buttons available in article lists and detail views for admins
 - Complete article management from both list view and detail view
+- Admin dashboard for managing all articles
 
 ### Search and Filter System
 - **Real-time Search**: Search across title, content, tags, and author names
@@ -197,9 +198,8 @@ The frontend will run on `http://localhost:3000`
 ### Article Status System
 - **Draft**: Visible to author and admins only
 - **Published**: Visible to everyone
-- **Private**: Visible to author and admins only
-- Writers can set any status when creating/editing articles
-- Admins can change any article status
+- Writers can only create draft articles
+- Admins can publish draft articles
 
 ## Role-Based Authorization Matrix
 
@@ -207,10 +207,10 @@ The frontend will run on `http://localhost:3000`
 |--------|--------|--------| ------|
 | View published articles | ✅ | ✅ | ✅ |
 | Create articles | ❌ | ✅ | ✅ |
-| Edit own drafts/private | ❌ | ✅ | ✅ |
+| Edit own drafts | ❌ | ✅ | ✅ |
 | Edit any article | ❌ | ❌ | ✅ |
 | Publish articles | ❌ | ❌ | ✅ |
-| Delete own articles | ❌ | ✅ | ✅ |
+| Delete own articles | ❌ | ❌ | ✅ |
 | Delete any article | ❌ | ❌ | ✅ |
 
 ## Usage
@@ -218,13 +218,12 @@ The frontend will run on `http://localhost:3000`
 1. **Register/Login**: Create an account with your desired role (admin, writer, or reader)
 
 2. **Writers**:
-   - Create new articles (draft/published/private status)
-   - Edit your own articles
-   - Delete your own articles
+   - Create new articles (draft status only)
+   - Edit your own draft articles
    - View all your articles in "My Articles" section
 
 3. **Admins**:
-   - View all articles (drafts, published, and private)
+   - View all articles (drafts and published)
    - Edit any article (from article list or detail view)
    - Delete any article with confirmation
    - Publish draft articles
@@ -253,9 +252,5 @@ The frontend will run on `http://localhost:3000`
   - Automatic admin user creation on server startup
 - Input validation and sanitization
 - Secure article visibility based on user roles
-
-## License
-
-ISC
 
 

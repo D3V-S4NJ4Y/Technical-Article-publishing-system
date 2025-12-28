@@ -8,7 +8,6 @@ const EditArticle = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
-  const [status, setStatus] = useState('draft');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [article, setArticle] = useState(null);
@@ -25,7 +24,6 @@ const EditArticle = () => {
       setTitle(article.title);
       setContent(article.content);
       setTags(article.tags.join(', '));
-      setStatus(article.status);
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to load article');
     }
@@ -46,7 +44,6 @@ const EditArticle = () => {
         title,
         content,
         tags: tagsArray,
-        status,
       });
 
       navigate(`/articles/${id}`);
@@ -100,29 +97,6 @@ const EditArticle = () => {
             />
             <small style={{ display: 'block', marginTop: '8px', color: 'var(--text-secondary)', fontSize: '14px' }}>
               Add relevant tags to help readers find your article
-            </small>
-          </div>
-          <div className="form-group">
-            <label>Status</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '14px 16px',
-                border: '2px solid var(--border-color)',
-                borderRadius: '10px',
-                fontSize: '16px',
-                background: 'var(--bg-white)',
-                fontFamily: 'inherit'
-              }}
-            >
-              <option value="draft">Draft - Not visible to public</option>
-              <option value="published">Published - Visible to everyone</option>
-              <option value="private">Private - Only visible to you</option>
-            </select>
-            <small style={{ display: 'block', marginTop: '8px', color: 'var(--text-secondary)', fontSize: '14px' }}>
-              Choose the visibility status for your article
             </small>
           </div>
           <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>

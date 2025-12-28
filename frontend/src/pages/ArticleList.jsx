@@ -99,6 +99,34 @@ const ArticleList = () => {
     }
   };
 
+  const handlePublish = async (articleId) => {
+    try {
+      await axios.patch(`/api/articles/${articleId}/publish`);
+      setMessage('Article published successfully!');
+      fetchArticles();
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Failed to publish article');
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
+  const handleShareArticle = (article) => {
+    const url = `${window.location.origin}/articles/${article._id}`;
+    if (navigator.share) {
+      navigator.share({
+        title: article.title,
+        text: article.content.substring(0, 100) + '...',
+        url: url
+      });
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setMessage('Article link copied to clipboard!');
+        setTimeout(() => setMessage(''), 3000);
+      });
+    }
+  };
+
   if (loading) {
     return <div className="container loading">Loading articles...</div>;
   }
@@ -106,7 +134,6 @@ const ArticleList = () => {
   const displayArticles = filteredArticles.length > 0 ? filteredArticles : articles;
   const publishedArticles = displayArticles.filter(a => a.status === 'published');
   const draftArticles = displayArticles.filter(a => a.status === 'draft');
-  const privateArticles = displayArticles.filter(a => a.status === 'private');
 
   return (
     <div className="container">
@@ -160,94 +187,6 @@ const ArticleList = () => {
           {message}
         </div>
       )}
-      {privateArticles.length > 0 && (user?.role === 'writer' || user?.role === 'admin') && (
-        <div className="card" style={{ 
-          marginBottom: '32px',
-          background: 'linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%)',
-          border: '2px solid rgba(107, 114, 128, 0.3)'
-        }}>
-          <h2 style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '12px',
-            color: '#374151',
-            marginBottom: '20px'
-          }}>
-            Your Private Articles ({privateArticles.length})
-          </h2>
-          <div className="article-grid">
-            {privateArticles.map((article) => (
-              <div key={article._id} className="card" style={{ 
-                display: 'flex', 
-                flexDirection: 'column',
-                height: '100%',
-                background: 'white',
-                border: '2px solid rgba(107, 114, 128, 0.2)'
-              }}>
-                <div style={{ marginBottom: '12px' }}>
-                  <span className="badge badge-private">Private</span>
-                </div>
-                <h2 style={{ marginBottom: '12px', fontSize: '1.5rem' }}>
-                  <Link to={`/articles/${article._id}`} style={{ 
-                    color: 'var(--text-primary)', 
-                    textDecoration: 'none',
-                    background: 'linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text'
-                  }}>
-                    {article.title}
-                  </Link>
-                </h2>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px',
-                  marginBottom: '16px',
-                  color: 'var(--text-secondary)',
-                  fontSize: '14px'
-                }}>
-                  <span>Author: {article.author?.username || 'Unknown'}</span>
-                  <span>•</span>
-                  <span>Created: {new Date(article.createdAt).toLocaleDateString()}</span>
-                </div>
-                <p style={{ 
-                  marginBottom: '16px', 
-                  color: 'var(--text-secondary)',
-                  flexGrow: 1,
-                  lineHeight: '1.7'
-                }}>
-                  {article.content.substring(0, 150)}...
-                </p>
-                <div style={{ marginBottom: '16px' }}>
-                  {article.tags.map((tag, index) => (
-                    <span key={index} className="tag">
-  {tag}
-                    </span>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
-                  <Link 
-                    to={`/articles/${article._id}`} 
-                    className="btn btn-secondary" 
-                    style={{ flex: 1, textAlign: 'center' }}
-                  >
-                    View
-                  </Link>
-                  <Link 
-                    to={`/edit-article/${article._id}`} 
-                    className="btn btn-primary" 
-                    style={{ flex: 1, textAlign: 'center' }}
-                  >
-                    Edit
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {draftArticles.length > 0 && (user?.role === 'writer' || user?.role === 'admin') && (
         <div className="card" style={{ 
           marginBottom: '32px',
@@ -329,6 +268,15 @@ const ArticleList = () => {
                   >
                     Edit
                   </Link>
+                  {user?.role === 'admin' && (
+                    <button
+                      onClick={() => handlePublish(article._id)}
+                      className="btn btn-success"
+                      style={{ flex: 1, textAlign: 'center' }}
+                    >
+                      Publish
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -401,13 +349,55 @@ const ArticleList = () => {
                     </span>
                   ))}
                 </div>
-                <Link 
-                  to={`/articles/${article._id}`} 
-                  className="btn btn-primary" 
-                  style={{ marginTop: 'auto', width: '100%', textAlign: 'center' }}
-                >
-                  Read More
-                </Link>
+                {user?.role === 'admin' ? (
+                  <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', flexWrap: 'wrap' }}>
+                    <Link 
+                      to={`/articles/${article._id}`} 
+                      className="btn btn-secondary" 
+                      style={{ flex: 1, textAlign: 'center' }}
+                    >
+                      View
+                    </Link>
+                    <Link 
+                      to={`/edit-article/${article._id}`} 
+                      className="btn btn-primary" 
+                      style={{ flex: 1, textAlign: 'center' }}
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(article._id, article.title)}
+                      className="btn btn-danger"
+                      style={{ flex: 1, textAlign: 'center' }}
+                    >
+                      Delete
+                    </button>
+                    <button
+                      onClick={() => handleShareArticle(article)}
+                      className="btn btn-success"
+                      style={{ flex: 1, textAlign: 'center' }}
+                    >
+                      Share
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', flexWrap: 'wrap' }}>
+                    <Link 
+                      to={`/articles/${article._id}`} 
+                      className="btn btn-primary" 
+                      style={{ flex: 1, textAlign: 'center' }}
+                    >
+                      Read More
+                    </Link>
+                    <button
+                      onClick={() => handleShareArticle(article)}
+                      className="btn btn-secondary"
+                      style={{ flex: 1, textAlign: 'center' }}
+                    >
+                      Share
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

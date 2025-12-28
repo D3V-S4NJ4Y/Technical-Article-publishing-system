@@ -9,8 +9,18 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-content">
-        <Link to="/" onClick={() => setMenuOpen(false)}>
-          <h1>Tech Articles</h1>
+        <Link to="/" onClick={() => setMenuOpen(false)} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            fontWeight: '700',
+            fontSize: '18px',
+            color: 'white'
+          }}>
+            📝
+          </div>
+          <h1 style={{ margin: 0 }}>TechArticles</h1>
         </Link>
         <button 
           className="mobile-menu-toggle"

@@ -15,9 +15,16 @@ router.post('/', authenticate, authorize('writer', 'admin'), async (req, res) =>
       return res.status(400).json({ message: 'Title and content are required' });
     }
 
-    // Validate status
-    const validStatuses = ['draft', 'published', 'private'];
-    const articleStatus = status && validStatuses.includes(status) ? status : 'draft';
+    // Validate status - writers can only create drafts
+    const validStatuses = ['draft', 'published'];
+    let articleStatus = 'draft'; // default
+    
+    if (status && validStatuses.includes(status)) {
+      if (req.user.role === 'writer' && status === 'published') {
+        return res.status(403).json({ message: 'Only admins can publish articles' });
+      }
+      articleStatus = status;
+    }
 
     const article = new Article({
       title,
@@ -60,8 +67,7 @@ router.get('/', async (req, res) => {
             query = {
               $or: [
                 { status: 'published' },
-                { status: 'draft', author: user._id },
-                { status: 'private', author: user._id }
+                { status: 'draft', author: user._id }
               ]
             };
           } else if (user.role === 'admin') {
@@ -128,9 +134,14 @@ router.put('/:id', authenticate, async (req, res) => {
       return res.status(404).json({ message: 'Article not found' });
     }
 
-    // Check permissions: writer can only edit their own articles, admin can edit any
+    // Check permissions: writer can only edit their own draft articles, admin can edit any
     if (req.user.role !== 'admin' && article.author.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'You can only edit your own articles' });
+    }
+    
+    // Writers can only edit draft articles
+    if (req.user.role === 'writer' && article.status === 'published') {
+      return res.status(403).json({ message: 'You cannot edit published articles' });
     }
 
     const { title, content, tags, status } = req.body;
@@ -139,10 +150,15 @@ router.put('/:id', authenticate, async (req, res) => {
     if (content) article.content = content;
     if (tags) article.tags = tags;
 
-    // Allow status change for writers (their own articles) and admins
+    // Allow status change for writers (their own draft articles) and admins
     if (status) {
-      const validStatuses = ['draft', 'published', 'private'];
+      const validStatuses = ['draft', 'published'];
       if (validStatuses.includes(status)) {
+        // Writers can only set draft, admins can set any status
+        if (req.user.role === 'writer' && status === 'published') {
+          return res.status(403).json({ message: 'Only admins can publish articles' });
+        }
+        
         const oldStatus = article.status;
         article.status = status;
         
@@ -166,18 +182,13 @@ router.put('/:id', authenticate, async (req, res) => {
   }
 });
 
-// DELETE /articles/:id → Admin (any article), Writer (own articles)
-router.delete('/:id', authenticate, async (req, res) => {
+// DELETE /articles/:id → Admin only
+router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
   try {
     const article = await Article.findById(req.params.id);
 
     if (!article) {
       return res.status(404).json({ message: 'Article not found' });
-    }
-
-    // Check permissions: admin can delete any article, writer can only delete their own
-    if (req.user.role !== 'admin' && article.author.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'You can only delete your own articles' });
     }
 
     await Article.findByIdAndDelete(req.params.id);

@@ -21,7 +21,7 @@ const articleSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['draft', 'published', 'private'],
+    enum: ['draft', 'published'],
     default: 'draft',
   },
   publishedAt: {

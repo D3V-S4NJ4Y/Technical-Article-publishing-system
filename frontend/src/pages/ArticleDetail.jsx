@@ -10,6 +10,7 @@ const ArticleDetail = () => {
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     fetchArticle();
@@ -26,6 +27,34 @@ const ArticleDetail = () => {
     }
   };
 
+  const handlePublish = async () => {
+    try {
+      await axios.patch(`/api/articles/${id}/publish`);
+      setMessage('Article published successfully!');
+      fetchArticle(); // Refresh article data
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Failed to publish article');
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
+  const handleShare = () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      navigator.share({
+        title: article.title,
+        text: article.content.substring(0, 100) + '...',
+        url: url
+      });
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setMessage('Article link copied to clipboard!');
+        setTimeout(() => setMessage(''), 3000);
+      });
+    }
+  };
+
   if (loading) {
     return <div className="container loading">Loading article...</div>;
   }
@@ -38,10 +67,15 @@ const ArticleDetail = () => {
     );
   }
 
-  const canEdit = user && (user.role === 'admin' || (user.role === 'writer' && String(article.author._id) === String(user.id)));
+  const canEdit = user && (user.role === 'admin' || (user.role === 'writer' && String(article.author._id) === String(user.id) && article.status === 'draft'));
 
   return (
     <div className="container">
+      {message && (
+        <div className={`alert ${message.includes('success') ? 'alert-success' : 'alert-error'}`}>
+          {message}
+        </div>
+      )}
       <div className="card">
         <div style={{ 
           marginBottom: '24px', 
@@ -54,14 +88,30 @@ const ArticleDetail = () => {
           <span className={`badge badge-${article.status}`}>
             {article.status === 'published' ? 'Published' : article.status === 'private' ? 'Private' : 'Draft'}
           </span>
-          {canEdit && (
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            {canEdit && (
+              <button
+                className="btn btn-secondary"
+                onClick={() => navigate(`/edit-article/${id}`)}
+              >
+                Edit Article
+              </button>
+            )}
+            {user?.role === 'admin' && article.status === 'draft' && (
+              <button
+                className="btn btn-success"
+                onClick={handlePublish}
+              >
+                Publish Article
+              </button>
+            )}
             <button
-              className="btn btn-secondary"
-              onClick={() => navigate(`/edit-article/${id}`)}
+              className="btn btn-primary"
+              onClick={handleShare}
             >
-              Edit Article
+              Share Article
             </button>
-          )}
+          </div>
         </div>
         <h1 style={{ 
           marginBottom: '24px',
