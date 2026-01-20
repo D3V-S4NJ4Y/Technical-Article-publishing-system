@@ -4,8 +4,10 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { securityHeaders, apiRateLimit, authRateLimit } from './middleware/security.js';
 import articleRoutes from './routes/articles.js';
 import authRoutes from './routes/auth.js';
+import adminRoutes from './routes/admin.js';
 import User from './models/User.js';
 
 dotenv.config();
@@ -15,23 +17,44 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Middleware
+// Security middleware
+app.use(securityHeaders);
+app.use(apiRateLimit);
+
+// CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? true  // Allow all origins in production for single deployment
     : ['http://localhost:3000'],
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// API Routes
-app.use('/api/auth', authRoutes);
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Trust proxy for rate limiting
+app.set('trust proxy', 1);
+
+// API Routes with rate limiting
+app.use('/api/auth', authRateLimit, authRoutes);
 app.use('/api/articles', articleRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Server is running' });
+  res.json({ 
+    status: 'OK', 
+    message: 'Technical Article Publishing System is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Test route for debugging
+app.get('/api/test', (req, res) => {
+  console.log('Test route hit!');
+  res.json({ message: 'Backend is working!' });
 });
 
 // Serve static files from React build in production
@@ -43,6 +66,26 @@ if (process.env.NODE_ENV === 'production') {
     res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
   });
 }
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Global error:', err);
+  
+  // Don't leak error details in production
+  const message = process.env.NODE_ENV === 'production' 
+    ? 'Internal server error' 
+    : err.message;
+    
+  res.status(err.status || 500).json({
+    message,
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+  });
+});
+
+// 404 handler for API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ message: 'API endpoint not found' });
+});
 
 // MongoDB Connection
 mongoose

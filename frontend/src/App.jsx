@@ -9,14 +9,26 @@ import ArticleDetail from './pages/ArticleDetail';
 import CreateArticle from './pages/CreateArticle';
 import EditArticle from './pages/EditArticle';
 import MyArticles from './pages/MyArticles';
-import AdminDashboard from './pages/AdminDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminArticles from './pages/admin/AdminArticles';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminAuditLogs from './pages/admin/AdminAuditLogs';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="loading-container">
+        <div className="spinner">
+          <div className="spinner-circle"></div>
+        </div>
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   if (!user) {
@@ -40,6 +52,8 @@ function AppRoutes() {
       <Route path="/register" element={!user ? <Register /> : <Navigate to="/" />} />
       <Route path="/articles" element={<ArticleList />} />
       <Route path="/articles/:id" element={<ArticleDetail />} />
+      
+      {/* Writer Routes */}
       <Route
         path="/create-article"
         element={
@@ -64,6 +78,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      
+      {/* Admin Routes */}
       <Route
         path="/admin"
         element={
@@ -72,20 +88,59 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/admin/articles"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <AdminArticles />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <AdminUsers />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/analytics"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <AdminAnalytics />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/audit-logs"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <AdminAuditLogs />
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Catch all route */}
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="App">
-          <Navbar />
-          <AppRoutes />
-        </div>
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <div className="App">
+            <Navbar />
+            <main>
+              <AppRoutes />
+            </main>
+          </div>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

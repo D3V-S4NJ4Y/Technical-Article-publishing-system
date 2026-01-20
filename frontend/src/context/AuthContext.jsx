@@ -19,20 +19,32 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchUser();
+      // Add a small delay to ensure backend is ready
+      setTimeout(() => {
+        fetchUser();
+      }, 1000);
     } else {
       setLoading(false);
     }
   }, []);
 
-  const fetchUser = async () => {
+  const fetchUser = async (retries = 3) => {
     try {
       const response = await axios.get('/api/auth/me');
       setUser(response.data.user);
+      setLoading(false);
     } catch (error) {
+      if (retries > 0 && (error.code === 'ECONNREFUSED' || error.message.includes('Network Error'))) {
+        // Retry after 2 seconds if connection refused
+        setTimeout(() => {
+          fetchUser(retries - 1);
+        }, 2000);
+        return;
+      }
+      
+      // If it's an auth error or no more retries, clear token
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
-    } finally {
       setLoading(false);
     }
   };

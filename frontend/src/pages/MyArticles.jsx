@@ -7,11 +7,25 @@ const MyArticles = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredArticles, setFilteredArticles] = useState([]);
   const { user } = useAuth();
 
   useEffect(() => {
     fetchArticles();
   }, []);
+
+  useEffect(() => {
+    if (searchTerm) {
+      const filtered = articles.filter(article =>
+        article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        article.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      setFilteredArticles(filtered);
+    } else {
+      setFilteredArticles(articles);
+    }
+  }, [searchTerm, articles]);
 
   const fetchArticles = async () => {
     try {
@@ -57,7 +71,26 @@ const MyArticles = () => {
           {message}
         </div>
       )}
-      {articles.length === 0 ? (
+      
+      <div style={{ marginBottom: '24px' }}>
+        <input
+          type="text"
+          placeholder="Search your articles by title or tags..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="form-input"
+          style={{ width: '100%', maxWidth: '400px' }}
+        />
+      </div>
+      
+      {filteredArticles.length === 0 && articles.length > 0 ? (
+        <div className="card" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <h2>No articles found matching your search.</h2>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '12px' }}>
+            Try different keywords or clear the search.
+          </p>
+        </div>
+      ) : articles.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '60px 20px' }}>
           <h2>You haven't created any articles yet.</h2>
           <p style={{ color: 'var(--text-secondary)', marginTop: '12px', marginBottom: '24px' }}>
@@ -69,7 +102,7 @@ const MyArticles = () => {
         </div>
       ) : (
         <div className="article-grid">
-          {articles.map((article) => (
+          {filteredArticles.map((article) => (
             <div key={article._id} className="card" style={{ 
               display: 'flex', 
               flexDirection: 'column',

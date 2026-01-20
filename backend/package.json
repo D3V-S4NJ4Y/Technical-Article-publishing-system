@@ -9,20 +9,25 @@
     "dev": "nodemon server.js",
     "build": "npm install"
   },
-  "keywords": ["mern", "articles", "publishing"],
+  "keywords": [
+    "mern",
+    "articles",
+    "publishing"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2",
-    "mongoose": "^8.0.3",
-    "dotenv": "^16.3.1",
     "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.5.1",
+    "express-validator": "^7.3.1",
+    "helmet": "^7.2.0",
     "jsonwebtoken": "^9.0.2",
-    "cors": "^2.8.5"
+    "mongoose": "^8.0.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
   }
 }
-
-

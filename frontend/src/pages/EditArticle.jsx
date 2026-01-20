@@ -34,6 +34,18 @@ const EditArticle = () => {
     setError('');
     setLoading(true);
 
+    // Client-side validation
+    if (title.trim().length < 5) {
+      setError('Title must be at least 5 characters long');
+      setLoading(false);
+      return;
+    }
+    if (content.trim().length < 10) {
+      setError('Content must be at least 10 characters long');
+      setLoading(false);
+      return;
+    }
+
     try {
       const tagsArray = tags
         .split(',')
@@ -41,14 +53,18 @@ const EditArticle = () => {
         .filter((tag) => tag);
 
       await axios.put(`/api/articles/${id}`, {
-        title,
-        content,
+        title: title.trim(),
+        content: content.trim(),
         tags: tagsArray,
       });
 
       navigate(`/articles/${id}`);
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to update article');
+      if (error.response?.data?.errors) {
+        setError(error.response.data.errors.map(err => err.msg).join(', '));
+      } else {
+        setError(error.response?.data?.message || 'Failed to update article');
+      }
     } finally {
       setLoading(false);
     }
@@ -76,6 +92,9 @@ const EditArticle = () => {
               required
               placeholder="Enter a compelling title for your article"
             />
+            <small style={{ display: 'block', marginTop: '4px', color: 'var(--text-secondary)', fontSize: '12px' }}>
+              Minimum 5 characters required
+            </small>
           </div>
           <div className="form-group">
             <label>Content</label>
@@ -86,6 +105,9 @@ const EditArticle = () => {
               placeholder="Write your article content here..."
               style={{ minHeight: '300px' }}
             />
+            <small style={{ display: 'block', marginTop: '4px', color: 'var(--text-secondary)', fontSize: '12px' }}>
+              Minimum 10 characters required ({content.length}/10)
+            </small>
           </div>
           <div className="form-group">
             <label>Tags (comma-separated)</label>

@@ -10,6 +10,7 @@ const ArticleList = () => {
   const [message, setMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
   const { user } = useAuth();
 
   useEffect(() => {
@@ -17,11 +18,11 @@ const ArticleList = () => {
   }, [user]);
 
   useEffect(() => {
-    filterArticles();
-  }, [articles, searchTerm, dateFilter]);
+    filterArticlesAndSort();
+  }, [articles, searchTerm, dateFilter, sortBy]);
 
-  const filterArticles = () => {
-    let filtered = articles;
+  const filterArticlesAndSort = () => {
+    let filtered = [...articles];
     
     if (searchTerm) {
       filtered = filtered.filter(article => 
@@ -67,7 +68,16 @@ const ArticleList = () => {
           break;
       }
     }
-    
+
+    // Sorting
+    if (sortBy === 'newest') {
+      filtered.sort((a, b) => new Date(b.publishedAt || b.createdAt) - new Date(a.publishedAt || a.createdAt));
+    } else if (sortBy === 'oldest') {
+      filtered.sort((a, b) => new Date(a.publishedAt || a.createdAt) - new Date(b.publishedAt || b.createdAt));
+    } else if (sortBy === 'title') {
+      filtered.sort((a, b) => a.title.localeCompare(b.title));
+    }
+
     setFilteredArticles(filtered);
   };
 
@@ -80,6 +90,33 @@ const ArticleList = () => {
       setArticles([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleShareArticle = (article) => {
+    const url = `${window.location.origin}/articles/${article._id}`;
+    const shareText = `Check out this article: ${article.title}\n\n${article.content.substring(0, 100)}...\n\nRead more at: ${url}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: article.title,
+        text: shareText,
+        url: url
+      });
+    } else {
+      // Try WhatsApp first, then fallback to clipboard
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+      const newWindow = window.open(whatsappUrl, '_blank');
+      
+      // If popup blocked, fallback to clipboard
+      setTimeout(() => {
+        if (!newWindow || newWindow.closed) {
+          navigator.clipboard.writeText(shareText).then(() => {
+            setMessage('Article text copied to clipboard!');
+            setTimeout(() => setMessage(''), 3000);
+          });
+        }
+      }, 1000);
     }
   };
 
@@ -111,22 +148,6 @@ const ArticleList = () => {
     }
   };
 
-  const handleShareArticle = (article) => {
-    const url = `${window.location.origin}/articles/${article._id}`;
-    if (navigator.share) {
-      navigator.share({
-        title: article.title,
-        text: article.content.substring(0, 100) + '...',
-        url: url
-      });
-    } else {
-      navigator.clipboard.writeText(url).then(() => {
-        setMessage('Article link copied to clipboard!');
-        setTimeout(() => setMessage(''), 3000);
-      });
-    }
-  };
-
   if (loading) {
     return <div className="container loading">Loading articles...</div>;
   }
@@ -147,8 +168,8 @@ const ArticleList = () => {
       </div>
       
       <div className="card" style={{ marginBottom: '32px' }}>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'end' }}>
-          <div className="form-group" style={{ flex: 1, minWidth: '250px', marginBottom: 0 }}>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <div className="form-group" style={{ flex: 2, minWidth: '260px', marginBottom: 0 }}>
             <label>Search Articles</label>
             <input
               type="text"
@@ -157,26 +178,28 @@ const ArticleList = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="form-group" style={{ minWidth: '150px', marginBottom: 0 }}>
+          <div className="form-group" style={{ minWidth: '170px', marginBottom: 0 }}>
             <label>Filter by Date</label>
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '14px 16px',
-                border: '2px solid var(--border-color)',
-                borderRadius: '10px',
-                fontSize: '16px',
-                background: 'var(--bg-white)',
-                fontFamily: 'inherit'
-              }}
             >
               <option value="all">All Time</option>
               <option value="today">Today</option>
               <option value="week">Last Week</option>
               <option value="month">Last Month</option>
               <option value="year">Last Year</option>
+            </select>
+          </div>
+          <div className="form-group" style={{ minWidth: '170px', marginBottom: 0 }}>
+            <label>Sort by</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="title">Title (A–Z)</option>
             </select>
           </div>
         </div>
@@ -187,108 +210,8 @@ const ArticleList = () => {
           {message}
         </div>
       )}
-      {draftArticles.length > 0 && (user?.role === 'writer' || user?.role === 'admin') && (
-        <div className="card" style={{ 
-          marginBottom: '32px',
-          background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-          border: '2px solid rgba(245, 158, 11, 0.3)'
-        }}>
-          <h2 style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '12px',
-            color: '#78350f',
-            marginBottom: '20px'
-          }}>
-            Your Draft Articles ({draftArticles.length})
-          </h2>
-          <div className="article-grid">
-            {draftArticles.map((article) => (
-              <div key={article._id} className="card" style={{ 
-                display: 'flex', 
-                flexDirection: 'column',
-                height: '100%',
-                background: 'white',
-                border: '2px solid rgba(245, 158, 11, 0.2)'
-              }}>
-                <div style={{ marginBottom: '12px' }}>
-                  <span className="badge badge-draft">Draft</span>
-                </div>
-                <h2 style={{ marginBottom: '12px', fontSize: '1.5rem' }}>
-                  <Link to={`/articles/${article._id}`} style={{ 
-                    color: 'var(--text-primary)', 
-                    textDecoration: 'none',
-                    background: 'linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text'
-                  }}>
-                    {article.title}
-                  </Link>
-                </h2>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px',
-                  marginBottom: '16px',
-                  color: 'var(--text-secondary)',
-                  fontSize: '14px'
-                }}>
-                  <span>Author: {article.author?.username || 'Unknown'}</span>
-                  <span>•</span>
-                  <span>Created: {new Date(article.createdAt).toLocaleDateString()}</span>
-                </div>
-                <p style={{ 
-                  marginBottom: '16px', 
-                  color: 'var(--text-secondary)',
-                  flexGrow: 1,
-                  lineHeight: '1.7'
-                }}>
-                  {article.content.substring(0, 150)}...
-                </p>
-                <div style={{ marginBottom: '16px' }}>
-                  {article.tags.map((tag, index) => (
-                    <span key={index} className="tag">
-  {tag}
-                    </span>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
-                  <Link 
-                    to={`/articles/${article._id}`} 
-                    className="btn btn-secondary" 
-                    style={{ flex: 1, textAlign: 'center' }}
-                  >
-                    View
-                  </Link>
-                  <Link 
-                    to={`/edit-article/${article._id}`} 
-                    className="btn btn-primary" 
-                    style={{ flex: 1, textAlign: 'center' }}
-                  >
-                    Edit
-                  </Link>
-                  {user?.role === 'admin' && (
-                    <button
-                      onClick={() => handlePublish(article._id)}
-                      className="btn btn-success"
-                      style={{ flex: 1, textAlign: 'center' }}
-                    >
-                      Publish
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {publishedArticles.length > 0 && (
-        <div className="card" style={{ 
-          background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
-          border: '2px solid rgba(16, 185, 129, 0.3)'
-        }}>
+        <div className="card published-articles-container">
           <h2 style={{ 
             display: 'flex', 
             alignItems: 'center', 
@@ -300,13 +223,7 @@ const ArticleList = () => {
           </h2>
           <div className="article-grid">
             {publishedArticles.map((article) => (
-              <div key={article._id} className="card" style={{ 
-                display: 'flex', 
-                flexDirection: 'column',
-                height: '100%',
-                background: 'white',
-                border: '2px solid rgba(16, 185, 129, 0.2)'
-              }}>
+              <div key={article._id} className="card article-card-item">
                 <div style={{ marginBottom: '12px' }}>
                   <span className="badge badge-published">Published</span>
                 </div>

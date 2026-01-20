@@ -18,10 +18,37 @@ const ArticleDetail = () => {
 
   const fetchArticle = async () => {
     try {
+      console.log('=== Frontend Article Fetch Debug ===');
+      console.log('Article ID:', id);
+      
+      // Ensure token is set if user is logged in
+      const token = localStorage.getItem('token');
+      console.log('Token from localStorage:', token ? 'Present' : 'Missing');
+      console.log('Current user:', user ? user.username : 'Not logged in');
+      
+      if (!token || !user) {
+        console.log('No token or user - redirecting to login');
+        setError('Please login to view this article');
+        setLoading(false);
+        return;
+      }
+      
+      if (token && !axios.defaults.headers.common['Authorization']) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        console.log('Token set in axios headers');
+      }
+      
+      console.log('Making request to:', `/api/articles/${id}`);
       const response = await axios.get(`/api/articles/${id}`);
+      console.log('Article fetched successfully:', response.data.article.title);
       setArticle(response.data.article);
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to load article');
+      console.log('Error fetching article:', error.response?.status, error.response?.data?.message);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        setError('Please login again to view this article');
+      } else {
+        setError(error.response?.data?.message || 'Failed to load article');
+      }
     } finally {
       setLoading(false);
     }
@@ -41,17 +68,28 @@ const ArticleDetail = () => {
 
   const handleShare = () => {
     const url = window.location.href;
+    const shareText = `Check out this article: ${article.title}\n\n${article.content.substring(0, 100)}...\n\nRead more at: ${url}`;
+    
     if (navigator.share) {
       navigator.share({
         title: article.title,
-        text: article.content.substring(0, 100) + '...',
+        text: shareText,
         url: url
       });
     } else {
-      navigator.clipboard.writeText(url).then(() => {
-        setMessage('Article link copied to clipboard!');
-        setTimeout(() => setMessage(''), 3000);
-      });
+      // Try WhatsApp first, then fallback to clipboard
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+      const newWindow = window.open(whatsappUrl, '_blank');
+      
+      // If popup blocked, fallback to clipboard
+      setTimeout(() => {
+        if (!newWindow || newWindow.closed) {
+          navigator.clipboard.writeText(shareText).then(() => {
+            setMessage('Article text copied to clipboard!');
+            setTimeout(() => setMessage(''), 3000);
+          });
+        }
+      }, 1000);
     }
   };
 
@@ -120,16 +158,7 @@ const ArticleDetail = () => {
         }}>
           {article.title}
         </h1>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '16px',
-          marginBottom: '24px',
-          padding: '16px',
-          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-          borderRadius: '12px',
-          flexWrap: 'wrap'
-        }}>
+        <div className="article-meta-container">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
             <strong>Author: {article.author?.username || 'Unknown'}</strong>
           </div>
@@ -160,19 +189,7 @@ const ArticleDetail = () => {
             </span>
           ))}
         </div>
-        <div
-          style={{
-            lineHeight: '1.9',
-            whiteSpace: 'pre-wrap',
-            marginTop: '32px',
-            padding: '24px',
-            background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',
-            borderRadius: '12px',
-            border: '1px solid var(--border-color)',
-            fontSize: '1.1rem',
-            color: 'var(--text-primary)'
-          }}
-        >
+        <div className="article-content-container">
           {article.content}
         </div>
       </div>
