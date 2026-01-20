@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Home from './pages/Home';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
+import Help from './pages/Help';
+import FAQ from './pages/FAQ';
+import Guidelines from './pages/Guidelines';
+import Feedback from './pages/Feedback';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ArticleList from './pages/ArticleList';
@@ -48,6 +57,14 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/help" element={<Help />} />
+      <Route path="/faq" element={<FAQ />} />
+      <Route path="/guidelines" element={<Guidelines />} />
+      <Route path="/feedback" element={<Feedback />} />
       <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
       <Route path="/register" element={!user ? <Register /> : <Navigate to="/" />} />
       <Route path="/articles" element={<ArticleList />} />
@@ -132,11 +149,12 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <Router>
-          <div className="App">
+          <div className="App" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <Navbar />
-            <main>
+            <main style={{ flex: 1 }}>
               <AppRoutes />
             </main>
+            <Footer />
           </div>
         </Router>
       </AuthProvider>

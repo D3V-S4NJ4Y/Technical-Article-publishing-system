@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import LikeButton from '../components/LikeButton';
+import ReviewSection from '../components/ReviewSection';
 
 const ArticleDetail = () => {
   const { id } = useParams();
@@ -26,13 +28,6 @@ const ArticleDetail = () => {
       console.log('Token from localStorage:', token ? 'Present' : 'Missing');
       console.log('Current user:', user ? user.username : 'Not logged in');
       
-      if (!token || !user) {
-        console.log('No token or user - redirecting to login');
-        setError('Please login to view this article');
-        setLoading(false);
-        return;
-      }
-      
       if (token && !axios.defaults.headers.common['Authorization']) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         console.log('Token set in axios headers');
@@ -44,11 +39,7 @@ const ArticleDetail = () => {
       setArticle(response.data.article);
     } catch (error) {
       console.log('Error fetching article:', error.response?.status, error.response?.data?.message);
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        setError('Please login again to view this article');
-      } else {
-        setError(error.response?.data?.message || 'Failed to load article');
-      }
+      setError(error.response?.data?.message || 'Failed to load article');
     } finally {
       setLoading(false);
     }
@@ -181,6 +172,8 @@ const ArticleDetail = () => {
                 ) : 'Not Published'}
             </span>
           </div>
+          <span style={{ color: 'var(--text-light)' }}>•</span>
+          <LikeButton articleId={id} />
         </div>
         <div style={{ marginBottom: '24px' }}>
           {article.tags.map((tag, index) => (
@@ -190,8 +183,12 @@ const ArticleDetail = () => {
           ))}
         </div>
         <div className="article-content-container">
-          {article.content}
+          <div dangerouslySetInnerHTML={{ __html: article.content }} />
         </div>
+        
+        {article.status === 'published' && (
+          <ReviewSection articleId={id} />
+        )}
       </div>
     </div>
   );

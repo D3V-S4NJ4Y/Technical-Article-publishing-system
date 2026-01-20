@@ -8,6 +8,7 @@ import { securityHeaders, apiRateLimit, authRateLimit } from './middleware/secur
 import articleRoutes from './routes/articles.js';
 import authRoutes from './routes/auth.js';
 import adminRoutes from './routes/admin.js';
+import likesRoutes from './routes/likes.js';
 import User from './models/User.js';
 
 dotenv.config();
@@ -40,6 +41,7 @@ app.set('trust proxy', 1);
 app.use('/api/auth', authRateLimit, authRoutes);
 app.use('/api/articles', articleRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/likes', likesRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

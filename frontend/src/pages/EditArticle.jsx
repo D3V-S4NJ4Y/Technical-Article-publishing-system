@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import RichTextEditor from '../components/RichTextEditor';
 
 const EditArticle = () => {
   const { id } = useParams();
@@ -35,12 +36,14 @@ const EditArticle = () => {
     setLoading(true);
 
     // Client-side validation
+    const textContent = content.replace(/<[^>]*>/g, '').trim();
+    
     if (title.trim().length < 5) {
       setError('Title must be at least 5 characters long');
       setLoading(false);
       return;
     }
-    if (content.trim().length < 10) {
+    if (textContent.length < 10) {
       setError('Content must be at least 10 characters long');
       setLoading(false);
       return;
@@ -54,7 +57,7 @@ const EditArticle = () => {
 
       await axios.put(`/api/articles/${id}`, {
         title: title.trim(),
-        content: content.trim(),
+        content: content,
         tags: tagsArray,
       });
 
@@ -98,15 +101,13 @@ const EditArticle = () => {
           </div>
           <div className="form-group">
             <label>Content</label>
-            <textarea
+            <RichTextEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              required
+              onChange={setContent}
               placeholder="Write your article content here..."
-              style={{ minHeight: '300px' }}
             />
             <small style={{ display: 'block', marginTop: '4px', color: 'var(--text-secondary)', fontSize: '12px' }}>
-              Minimum 10 characters required ({content.length}/10)
+              Minimum 10 characters required ({content.replace(/<[^>]*>/g, '').length}/10)
             </small>
           </div>
           <div className="form-group">
