@@ -138,7 +138,7 @@ TechPublish/
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/techpublish.git
+git clone https://github.com/D3V-S4NJ4Y/techpublish.git
 cd techpublish
 ```
 
@@ -151,7 +151,7 @@ npm install
 3. **Environment Configuration**
 Create `.env` file in backend directory:
 ```env
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/techpublish
+MONGODB_URI=mongodb+srv://...
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 PORT=5000
 NODE_ENV=development
