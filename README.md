@@ -64,11 +64,6 @@ A comprehensive full-stack MERN (MongoDB, Express, React, Node.js) application f
 - **Context API** - State management
 - **CSS3** - Modern styling with variables
 
-### Development Tools
-- **Nodemon** - Auto-restart development server
-- **ESLint** - Code linting
-- **Prettier** - Code formatting
-
 ## 📁 Project Structure
 
 ```
